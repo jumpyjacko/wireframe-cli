@@ -61,9 +61,9 @@ fn main() {
     // "Render" 1D array as a 2D array
     for i in 0..SIZE*SIZE {
         if (i+1) % SIZE != 0 {
-            print!("{:?}", test[i]);
+            print!("{:?}", if screen[i] == 1 {"##"} else {"  "});
         } else {
-            print!("{:?}\n", test[i])
+            print!("{:?}\n", if screen[i] == 1 {"##"} else {"  "})
         }
     }
 }
