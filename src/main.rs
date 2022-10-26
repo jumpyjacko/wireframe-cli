@@ -149,17 +149,23 @@ fn main() {
     }
 
     // FIXME: Check whether I'm using the correct rotation matrix (this is yaw, pitch, roll from the 
-    //        matrix rotation Wikipedia page)
-    fn general_rotation(point: &Point3D, a: &f32, b: &f32, c: &f32) -> Point3D {
-        let xyz = arr1(&[point.x as f32, point.y as f32, point.z as f32]);
+    //        matrix rotation Wikipedia page), currently is tending to warp the geometry
+    fn general_rotation(point: &Point3D, c: &f32, b: &f32, a: &f32) -> Point3D {
+        let zyx = arr1(&[point.z as f32, point.y as f32, point.x as f32]);
 
-        let matrix = arr2(&[[a.cos() * b.cos(), (a.cos()*b.sin()*c.sin()) - (a.sin()*c.cos()), (a.cos()*b.sin()*c.cos())+(a.sin()*c.sin())],
-                            [a.sin() * b.sin(), (a.sin()*b.sin()*c.sin()) + (a.cos()*c.cos()), (a.sin()*b.sin()*c.cos())-(a.cos()*c.sin())],
-                            [-(b.sin()), b.cos() * c.sin(), b.cos() * c.cos()]]);
+        // First general rotation matrix
+        // let matrix = arr2(&[[a.cos() * b.cos(), (a.cos()*b.sin()*c.sin()) - (a.sin()*c.cos()), (a.cos()*b.sin()*c.cos())+(a.sin()*c.sin())],
+        //                     [a.sin() * b.sin(), (a.sin()*b.sin()*c.sin()) + (a.cos()*c.cos()), (a.sin()*b.sin()*c.cos())-(a.cos()*c.sin())],
+        //                     [-(b.sin()), b.cos() * c.sin(), b.cos() * c.cos()]]);
 
-        let rotated_xyz = matrix.dot(&xyz);
+        // Second general rotation matrix
+        let matrix = arr2(&[[b.cos() * c.cos(), (a.sin()*b.sin()*c.cos()) - (a.cos()*c.sin()), (a.cos()*b.sin()*c.cos())+(a.sin()*c.sin())],
+                            [b.cos() * c.sin(), (a.sin()*b.sin()*c.sin()) + (a.cos()*c.cos()), (a.cos()*b.sin()*c.sin())-(a.cos()*c.cos())],
+                            [-(b.sin()), a.cos() * b.cos(), a.cos() * b.cos()]]);
 
-        let point_xyz = Point3D {x: rotated_xyz[2], y: rotated_xyz[1], z: rotated_xyz[0]};
+        let rotated_zyx = matrix.dot(&zyx);
+
+        let point_xyz = Point3D {x: rotated_zyx[2], y: rotated_zyx[1], z: rotated_zyx[0]};
         return point_xyz;
     }
 
@@ -174,8 +180,8 @@ fn main() {
         let mut rotated_vert_table: Vec<Point3D> = vec!();
 
         for vert in vert_table.iter() {
-            let r_point = simple_rotate_y(&vert, &theta);
-            // let r_point = general_rotation(&vert, &theta, &theta, &theta);
+            // let r_point = simple_rotate_y(&vert, &theta);
+            let r_point = general_rotation(&vert, &theta, &1.0, &1.0);
             rotated_vert_table.push(r_point);
         }
 
