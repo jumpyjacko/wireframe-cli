@@ -148,6 +148,21 @@ fn main() {
         return rotated_xyz;
     }
 
+    // FIXME: Check whether I'm using the correct rotation matrix (this is yaw, pitch, roll from the 
+    //        matrix rotation Wikipedia page)
+    fn general_rotation(point: &Point3D, a: &f32, b: &f32, c: &f32) -> Point3D {
+        let xyz = arr1(&[point.x as f32, point.y as f32, point.z as f32]);
+
+        let matrix = arr2(&[[a.cos() * b.cos(), (a.cos()*b.sin()*c.sin()) - (a.sin()*c.cos()), (a.cos()*b.sin()*c.cos())+(a.sin()*c.sin())],
+                            [a.sin() * b.sin(), (a.sin()*b.sin()*c.sin()) + (a.cos()*c.cos()), (a.sin()*b.sin()*c.cos())-(a.cos()*c.sin())],
+                            [-(b.sin()), b.cos() * c.sin(), b.cos() * c.cos()]]);
+
+        let rotated_xyz = matrix.dot(&xyz);
+
+        let point_xyz = Point3D {x: rotated_xyz[2], y: rotated_xyz[1], z: rotated_xyz[0]};
+        return point_xyz;
+    }
+
     let mut theta: f32 = 0.0;
     
     loop {
@@ -160,6 +175,7 @@ fn main() {
 
         for vert in vert_table.iter() {
             let r_point = simple_rotate_y(&vert, &theta);
+            // let r_point = general_rotation(&vert, &theta, &theta, &theta);
             rotated_vert_table.push(r_point);
         }
 
