@@ -7,4 +7,4 @@ Written in Rust because I need to learn more of it. Definitely not optimized as 
 ### About the wireframe renderer
 This wireframe renderer uses [weak projection](https://en.wikipedia.org/wiki/3D_projection#Weak_perspective_projection) as well as the [digital differential analyzer](https://en.wikipedia.org/wiki/Digital_differential_analyzer_(graphics_algorithm)) to draw the lines. Lots of translation of the Wikipedia page's psuedo- and C++ code.
 
-![rotated_square_based_pyramid](./wireframe-cli.png)
+![rotating_square_based_pyramid](./wireframe-cli.gif)
