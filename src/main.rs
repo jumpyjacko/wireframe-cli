@@ -1,6 +1,7 @@
 use ndarray::arr1;
 use ndarray::arr2;
-use std::{thread, time};
+use clap::{Arg, Command};
+use std::{thread, time::Duration, time::Instant};
 
 struct Point3D {
     x: f32,
@@ -23,63 +24,126 @@ fn main() {
     const SIZE: usize = 40;
     const FOCAL_LENGTH: i32 = 40;
 
-    // FIXME: Everything here renders upside down lol, probably due to the way I index and then plot
-    // NOTE: This is a the vert_table and edge_table for a cube
-    // let vert_table: Vec<Point3D> = vec!(
-    //     Point3D { x: -60.0, y: 60.0, z: 60.0 },
-    //     Point3D { x: 60.0, y: 60.0, z: 60.0 },
-    //     Point3D { x: 60.0, y: -60.0, z: 60.0 },
-    //     Point3D { x: -60.0, y: -60.0, z: 60.0 },
-    //     Point3D { x: -60.0, y: 60.0, z: -60.0 },
-    //     Point3D { x: 60.0, y: 60.0, z: -60.0 },
-    //     Point3D { x: 60.0, y: -60.0, z: -60.0 },
-    //     Point3D { x: -60.0, y: -60.0, z: -60.0 },
-    // );
+    let matches = Command::new("wireframe-cli")
+        .version("0.3.0")
+        .author("Jackson Ly (JumpyJacko)")
+        .about("A small wireframe renderer")
+        .arg(Arg::new("shape")
+            .short('s')
+            .long("shape")
+            .default_value("cube")
+            .help("Pick what shape you want to see (only the ones below)\n    (cube, pyramid, star_cube)"))
+        .arg(Arg::new("fill")
+            .short('f')
+            .long("fill")
+            .default_value(".")
+            .help("Pick characters to fill whitespace\n    (use single of that character, i.e. '.')"))
+        .arg(Arg::new("line")
+            .short('l')
+            .long("line")
+            .default_value("#")
+            .help("Pick characters to use for the lines\n    (use single of that character, i.e. '#')"))
+        .get_matches();
 
-    // // Assign edges by the index of the verts in the vert_table
-    // let edge_table: Vec<Edge> = vec!(
-    //     // Front Face
-    //     Edge { a: 0, b: 1 },
-    //     Edge { a: 1, b: 2 },
-    //     Edge { a: 2, b: 3 },
-    //     Edge { a: 3, b: 0 },
+    
+    let fill_char: &str = matches.get_one::<String>("fill").unwrap();
+    let line_char: &str = matches.get_one::<String>("line").unwrap();
+    let shape: &str = matches.get_one::<String>("shape").unwrap();
 
-    //     // Back Face
-    //     Edge { a: 4, b: 5 },
-    //     Edge { a: 5, b: 6 },
-    //     Edge { a: 6, b: 7 },
-    //     Edge { a: 7, b: 4 },
+    let vert_table: Vec<Point3D>;
+    let edge_table: Vec<Edge>;
 
-    //     // Connecting the Front and Back Face
-    //     Edge { a: 0, b: 4 },
-    //     Edge { a: 1, b: 5 },
-    //     Edge { a: 2, b: 6 },
-    //     Edge { a: 3, b: 7 },
-    // );
-
-    // NOTE: This is a the vert_table and edge_table for a square-based pyramid
-    let vert_table: Vec<Point3D> = vec!(
-        Point3D { x: -60.0, y: -60.0, z: -60.0 },
-        Point3D { x: 60.0, y: -60.0, z: -60.0 },
-        Point3D { x: 60.0, y: -60.0, z: 60.0 },
-        Point3D { x: -60.0, y: -60.0, z: 60.0 },
-        Point3D { x: 0.0, y: 60.0, z: 0.0 },
-    );
-
-    // Assign edges by the index of the verts in the vert_table
-    let edge_table: Vec<Edge> = vec!(
-        // Base Face
-        Edge { a: 0, b: 1 },
-        Edge { a: 1, b: 2 },
-        Edge { a: 2, b: 3 },
-        Edge { a: 3, b: 0 },
+    match shape {
+        "cube" => {
+            // NOTE: This is a the vert_table and edge_table for a cube
+            vert_table = vec!(
+                Point3D { x: -60.0, y: 60.0, z: 60.0 },
+                Point3D { x: 60.0, y: 60.0, z: 60.0 },
+                Point3D { x: 60.0, y: -60.0, z: 60.0 },
+                Point3D { x: -60.0, y: -60.0, z: 60.0 },
+                Point3D { x: -60.0, y: 60.0, z: -60.0 },
+                Point3D { x: 60.0, y: 60.0, z: -60.0 },
+                Point3D { x: 60.0, y: -60.0, z: -60.0 },
+                Point3D { x: -60.0, y: -60.0, z: -60.0 },
+            );
+            edge_table = vec!(
+                // Front Face
+                Edge { a: 0, b: 1 },
+                Edge { a: 1, b: 2 },
+                Edge { a: 2, b: 3 },
+                Edge { a: 3, b: 0 },
         
-        // Base-to-Point Edges
-        Edge { a: 0, b: 4 },
-        Edge { a: 1, b: 4 },
-        Edge { a: 2, b: 4 },
-        Edge { a: 3, b: 4 },
-    );
+                // Back Face
+                Edge { a: 4, b: 5 },
+                Edge { a: 5, b: 6 },
+                Edge { a: 6, b: 7 },
+                Edge { a: 7, b: 4 },
+        
+                // Connecting the Front and Back Face
+                Edge { a: 0, b: 4 },
+                Edge { a: 1, b: 5 },
+                Edge { a: 2, b: 6 },
+                Edge { a: 3, b: 7 },
+            );
+        },
+        "pyramid" => {
+            // NOTE: This is a the vert_table and edge_table for a square-based pyramid
+            vert_table = vec!(
+                Point3D { x: -60.0, y: -60.0, z: -60.0 },
+                Point3D { x: 60.0, y: -60.0, z: -60.0 },
+                Point3D { x: 60.0, y: -60.0, z: 60.0 },
+                Point3D { x: -60.0, y: -60.0, z: 60.0 },
+                Point3D { x: 0.0, y: 60.0, z: 0.0 },
+            );
+            edge_table = vec!(
+                // Base Face
+                Edge { a: 0, b: 1 },
+                Edge { a: 1, b: 2 },
+                Edge { a: 2, b: 3 },
+                Edge { a: 3, b: 0 },
+                
+                // Base-to-Point Edges
+                Edge { a: 0, b: 4 },
+                Edge { a: 1, b: 4 },
+                Edge { a: 2, b: 4 },
+                Edge { a: 3, b: 4 },
+            );
+        },
+        "star_cube" => {
+            // NOTE: This is a the vert_table and edge_table for a cube with a
+            //       different edge table and looks like a star 
+            vert_table = vec!(
+                Point3D { x: -70.0, y: 70.0, z: 70.0 },
+                Point3D { x: 70.0, y: 70.0, z: 70.0 },
+                Point3D { x: 70.0, y: -70.0, z: 70.0 },
+                Point3D { x: -70.0, y: -70.0, z: 70.0 },
+                Point3D { x: -70.0, y: 70.0, z: -70.0 },
+                Point3D { x: 70.0, y: 70.0, z: -70.0 },
+                Point3D { x: 70.0, y: -70.0, z: -70.0 },
+                Point3D { x: -70.0, y: -70.0, z: -70.0 },
+            );
+            edge_table = vec!(
+                // Connecting Diagonals across the faces
+                Edge { a: 0, b: 2 },
+                Edge { a: 0, b: 5 },
+                Edge { a: 1, b: 3 },
+                Edge { a: 1, b: 4 },
+                Edge { a: 1, b: 6 },
+                Edge { a: 2, b: 5 },
+                Edge { a: 2, b: 7 },
+                Edge { a: 3, b: 6 },
+                Edge { a: 3, b: 4 },
+                Edge { a: 0, b: 7 },
+                Edge { a: 4, b: 6 },
+                Edge { a: 5, b: 7 },
+            );
+        },
+        _ => {
+            vert_table = vec!(Point3D { x: 1.0, y: 1.0, z: 1.0 });
+            edge_table = vec!(Edge { a:0, b:0 });
+            println!("Shape does not exist");
+        },
+    }
     
     fn project_point(point: &Point3D, focal_length: &i32) -> Point2D {
         let p_x: i32 = ((*focal_length as f32 * point.x) / (*focal_length as f32 + point.z + 256.0)) as i32;
@@ -90,6 +154,7 @@ fn main() {
         return projected_point;
     }
 
+    // FIXME: Everything renders upsidedown, probably due to the way I index and then plot
     /// Plots a line given 2 points and the screen to modify
     fn plot_line(point1: Point2D, point2: Point2D, mut screen: [[u8; SIZE]; SIZE]) -> [[u8; SIZE]; SIZE] {
         let offset: f32 = SIZE as f32/2.0;
@@ -118,19 +183,15 @@ fn main() {
         return screen;
     }
 
-    // TODO: Implement matrix rotation
-    //          If I'm lazy, do the 2D matrix rotation, else do the full rotation matrix
-    //          This needs a theta variable as well
-    //          Probably watch 3b1b linear algebra series
-    fn simple_rotate_z(point: &Point3D, theta: &f32) -> Point3D {
-        let z = point.z as f32;
-        let xy = arr1(&[point.x as f32, point.y as f32]);
+    fn simple_rotate_x(point: &Point3D, theta: &f32) -> Point3D {
+        let x = point.x as f32;
+        let yz = arr1(&[point.y as f32, point.z as f32]);
         let matrix = arr2(&[[theta.cos(), -theta.sin()],
                             [theta.sin(), theta.cos()]]);
 
-        let rotated_xy = matrix.dot(&xy);
+        let rotated_yz = matrix.dot(&yz);
 
-        let rotated_xyz = Point3D {x: rotated_xy[0], y: rotated_xy[1], z: z };
+        let rotated_xyz = Point3D {x: x, y: rotated_yz[0], z: rotated_yz[1] };
 
         return rotated_xyz;
     }
@@ -147,31 +208,26 @@ fn main() {
 
         return rotated_xyz;
     }
+    
+    fn simple_rotate_z(point: &Point3D, theta: &f32) -> Point3D {
+        let z = point.z as f32;
+        let xy = arr1(&[point.x as f32, point.y as f32]);
+        let matrix = arr2(&[[theta.cos(), -theta.sin()],
+                            [theta.sin(), theta.cos()]]);
 
-    // FIXME: Check whether I'm using the correct rotation matrix (this is yaw, pitch, roll from the 
-    //        matrix rotation Wikipedia page), currently is tending to warp the geometry
-    fn general_rotation(point: &Point3D, c: &f32, b: &f32, a: &f32) -> Point3D {
-        let zyx = arr1(&[point.z as f32, point.y as f32, point.x as f32]);
+        let rotated_xy = matrix.dot(&xy);
 
-        // First general rotation matrix
-        // let matrix = arr2(&[[a.cos() * b.cos(), (a.cos()*b.sin()*c.sin()) - (a.sin()*c.cos()), (a.cos()*b.sin()*c.cos())+(a.sin()*c.sin())],
-        //                     [a.sin() * b.sin(), (a.sin()*b.sin()*c.sin()) + (a.cos()*c.cos()), (a.sin()*b.sin()*c.cos())-(a.cos()*c.sin())],
-        //                     [-(b.sin()), b.cos() * c.sin(), b.cos() * c.cos()]]);
+        let rotated_xyz = Point3D {x: rotated_xy[0], y: rotated_xy[1], z: z };
 
-        // Second general rotation matrix
-        let matrix = arr2(&[[b.cos() * c.cos(), (a.sin()*b.sin()*c.cos()) - (a.cos()*c.sin()), (a.cos()*b.sin()*c.cos())+(a.sin()*c.sin())],
-                            [b.cos() * c.sin(), (a.sin()*b.sin()*c.sin()) + (a.cos()*c.cos()), (a.cos()*b.sin()*c.sin())-(a.cos()*c.cos())],
-                            [-(b.sin()), a.cos() * b.cos(), a.cos() * b.cos()]]);
-
-        let rotated_zyx = matrix.dot(&zyx);
-
-        let point_xyz = Point3D {x: rotated_zyx[2], y: rotated_zyx[1], z: rotated_zyx[0]};
-        return point_xyz;
+        return rotated_xyz;
     }
+
 
     let mut theta: f32 = 0.0;
     
     loop {
+        let timer = Instant::now();
+        // Clears screen
         print!("\x1B[2J\x1B[1;1H");
 
         let mut screen: [[u8; SIZE]; SIZE] = [[0; SIZE]; SIZE];
@@ -179,10 +235,12 @@ fn main() {
         let mut projected_vert_table: Vec<Point2D> = vec!();
         let mut rotated_vert_table: Vec<Point3D> = vec!();
 
+        // Rotates and moves the 3D points
         for vert in vert_table.iter() {
-            // let r_point = simple_rotate_y(&vert, &theta);
-            let r_point = general_rotation(&vert, &theta, &1.0, &1.0);
-            rotated_vert_table.push(r_point);
+            let r_point = simple_rotate_x(&vert, &theta);
+            let r_r_point = simple_rotate_y(&r_point, &theta);
+            let r_r_r_point = simple_rotate_z(&r_r_point, &theta);
+            rotated_vert_table.push(r_r_r_point);
         }
 
         // Iterates through vert_table and adds projected points to another vec
@@ -191,6 +249,7 @@ fn main() {
             projected_vert_table.push(p_point);
         }
 
+        // Draws lines between two points determined by the edge_table
         for edge in edge_table.iter() {
             screen = plot_line(Point2D { x: projected_vert_table[edge.a].x, y: projected_vert_table[edge.a].y }, Point2D { x: projected_vert_table[edge.b].x, y: projected_vert_table[edge.b].y }, screen);
         }
@@ -198,12 +257,20 @@ fn main() {
         // "Renders" 2D array from 0 and 1 to '  ' and '##'
         for row in screen.iter_mut() {
             for cell in row.iter_mut() {
-                print!("{}", if *cell as u8 == 1 {"##"} else {".."});
+                print!("{}{0}", if *cell as u8 == 1 {line_char} else {fill_char});
             }
             print!("\n");
         }
-        theta += 0.1;
 
-        thread::sleep(time::Duration::from_millis(200));
+        theta += 0.05;
+        if theta == 360.0 {theta = 0.0};
+
+        // Stat. readout
+        let duration = timer.elapsed().as_micros();
+        println!("frame time: {} μs", duration);
+        println!("     theta: {}", theta);
+
+        // Determines how long to hold frame (with lower frame duration, the flashing becomes more rapid)
+        thread::sleep(Duration::from_millis(40));
     }
 }
