@@ -224,11 +224,13 @@ fn main() {
 
 
     let mut theta: f32 = 0.0;
+
+    print!("\x1B[2J\x1B[1;1H");
     
     loop {
         let timer = Instant::now();
         // Clears screen
-        print!("\x1B[2J\x1B[1;1H");
+        print!("\x1B[1;1H");
 
         let mut screen: [[u8; SIZE]; SIZE] = [[0; SIZE]; SIZE];
 
