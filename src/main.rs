@@ -22,8 +22,10 @@ struct Edge {
 fn main() {
     // Size as in width or height, will always be in a square ratio
     const SIZE: usize = 40;
+    // "Camera" focal length, best to have the same as the canvas size
     const FOCAL_LENGTH: i32 = 40;
 
+    // CLI setup
     let matches = Command::new("wireframe-cli")
         .version("0.3.0")
         .author("Jackson Ly (JumpyJacko)")
@@ -37,12 +39,12 @@ fn main() {
             .short('f')
             .long("fill")
             .default_value(".")
-            .help("Pick characters to fill whitespace\n    (use single of that character, i.e. '.')"))
+            .help("Pick characters to fill whitespace\n    (use only one of that character)"))
         .arg(Arg::new("line")
             .short('l')
             .long("line")
             .default_value("#")
-            .help("Pick characters to use for the lines\n    (use single of that character, i.e. '#')"))
+            .help("Pick characters to use for the lines\n    (use only one of that character)"))
         .get_matches();
 
     
@@ -155,7 +157,6 @@ fn main() {
     }
 
     // FIXME: Everything renders upsidedown, probably due to the way I index and then plot
-    /// Plots a line given 2 points and the screen to modify
     fn plot_line(point1: Point2D, point2: Point2D, mut screen: [[u8; SIZE]; SIZE]) -> [[u8; SIZE]; SIZE] {
         let offset: f32 = SIZE as f32/2.0;
 
@@ -183,6 +184,7 @@ fn main() {
         return screen;
     }
 
+    // All three of these rotation functions use the simplified per-axis rotation matrix
     fn simple_rotate_x(point: &Point3D, theta: &f32) -> Point3D {
         let x = point.x as f32;
         let yz = arr1(&[point.y as f32, point.z as f32]);
@@ -222,14 +224,15 @@ fn main() {
         return rotated_xyz;
     }
 
-
     let mut theta: f32 = 0.0;
 
+    // Initial clear screen
     print!("\x1B[2J\x1B[1;1H");
     
+    // Render loop
     loop {
         let timer = Instant::now();
-        // Clears screen
+        // Moves cursor to top left
         print!("\x1B[1;1H");
 
         let mut screen: [[u8; SIZE]; SIZE] = [[0; SIZE]; SIZE];
@@ -256,7 +259,7 @@ fn main() {
             screen = plot_line(Point2D { x: projected_vert_table[edge.a].x, y: projected_vert_table[edge.a].y }, Point2D { x: projected_vert_table[edge.b].x, y: projected_vert_table[edge.b].y }, screen);
         }
 
-        // "Renders" 2D array from 0 and 1 to '  ' and '##'
+        // "Renders" 2D array from 0 and 1 to '..' and '##'
         for row in screen.iter_mut() {
             for cell in row.iter_mut() {
                 print!("{}{0}", if *cell as u8 == 1 {line_char} else {fill_char});
@@ -272,7 +275,7 @@ fn main() {
         println!("frame time: {} μs", duration);
         println!("     theta: {}", theta);
 
-        // Determines how long to hold frame (with lower frame duration, the flashing becomes more rapid)
+        // Determines how long to hold frame
         thread::sleep(Duration::from_millis(40));
     }
 }
