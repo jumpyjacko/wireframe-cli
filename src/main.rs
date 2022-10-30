@@ -31,7 +31,7 @@ fn main() {
 
     // CLI setup
     let matches = Command::new("wireframe-cli")
-        .version("0.3.0")
+        .version("0.4.0")
         .author("Jackson Ly (JumpyJacko)")
         .about("A small wireframe renderer")
         .arg(Arg::new("shape")

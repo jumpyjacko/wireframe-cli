@@ -19,25 +19,30 @@ A small wireframe renderer
 Usage: wireframe_cli.exe [OPTIONS]
 
 Options:
-  -s, --shape <shape>  Pick what shape you want to see (only the ones below)
-                           (cube, pyramid, star_cube) [default: cube]
-  -f, --fill <fill>    Pick characters to fill whitespace
-                           (use single of that character, i.e. '.') [default: .]
-  -l, --line <line>    Pick characters to use for the lines
-                           (use single of that character, i.e. '#') [default: #]
-  -h, --help           Print help information
-  -V, --version        Print version information
+  -s, --shape <shape>            Pick what shape you want to see (only the ones below)
+                                     (cube, pyramid, star_cube, donut) [default: cube]
+  -f, --fill <fill>              Pick characters to fill whitespace
+                                     (use only one of that character) [default: .]
+  -l, --line <line>              Pick characters to use for the lines
+                                     (use only one of that character) [default: #]
+  -t, --frame-time <frame-time>  Input how long to hold a frame
+                                     (in millis) [default: 40]
+  -h, --help                     Print help information
+  -V, --version                  Print version information
 ```
 
 # Showcase
-## Spinning Cube
+## Cube
 ![rotating_cube](./images/wireframe-cli-cube.gif)
 
-## Spinning Pyramid
+## Pyramid
 ![rotating_square_based_pyramid](./images/wireframe-cli-pyramid.gif)
 
-## Spinning Star Cube
+## Star Cube
 ![rotating_star_cube](./images/wireframe-cli-star-cube.gif)
 
+## Donut
+![rotating_donut](./images/wireframe-cli-donut.gif)
+
 ## Using Custom Argument Parameters
-![rotating_star_cube_custom](./images/wireframe-cli-star-cube-custom.gif)
+![rotating_cube_custom](./images/wireframe-cli-cube-custom.gif)
