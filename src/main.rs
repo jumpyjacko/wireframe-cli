@@ -406,9 +406,9 @@ fn main() {
 
         // Stat. readout
         let duration = timer.elapsed().as_micros();
-        println!("calculation duration: {} μs", duration);
-        println!("     frame hold time: {} ms", frame_time);
-        println!("               theta: {}", theta);
+        println!("calculation duration: {} μs   ", duration);
+        println!("     frame hold time: {} ms   ", frame_time);
+        println!("               theta: {}      ", theta);
 
         // Determines how long to hold frame
         thread::sleep(Duration::from_millis(frame_time));
