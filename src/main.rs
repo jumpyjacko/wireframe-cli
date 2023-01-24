@@ -3,30 +3,10 @@ use ndarray::arr1;
 use ndarray::arr2;
 use std::{thread, time::Duration, time::Instant};
 
-use crate::{
-    math::{
-        simple_rotate_x,
-        simple_rotate_y,
-        simple_rotate_z},
-    render::{plot_line, project_point}
-};
+use crate::math::{plot_line, Point2D, Point3D};
 
 mod math;
-mod render;
 mod shapes;
-
-#[derive(Clone, Copy)]
-pub struct Point3D {
-    x: f32,
-    y: f32,
-    z: f32,
-}
-
-#[derive(Clone, Copy)]
-pub struct Point2D {
-    x: i32,
-    y: i32,
-}
 
 #[derive(Clone, Copy)]
 pub struct Edge {
@@ -92,7 +72,7 @@ fn main() {
             vert_table = shapes::STAR_CUBE.verts.to_vec();
             edge_table = shapes::STAR_CUBE.edges.to_vec();
         }
-        "donut" => {
+        "donut" | "doughnut" => {
             vert_table = shapes::DOUGHNUT.verts.to_vec();
             edge_table = shapes::DOUGHNUT.edges.to_vec();
         }
@@ -118,49 +98,42 @@ fn main() {
         // Moves cursor to top left
         print!("\x1B[1;1H");
 
-        let mut screen: [[u8; SIZE]; SIZE] = [[0; SIZE]; SIZE];
+        let mut state: [[u8; SIZE]; SIZE] = [[0; SIZE]; SIZE];
 
         let mut projected_vert_table: Vec<Point2D> = vec![];
         let mut rotated_vert_table: Vec<Point3D> = vec![];
 
         // Rotates and moves the 3D points
-        for vert in vert_table.iter() {
-            let rotated_point = simple_rotate_z(&simple_rotate_y(&simple_rotate_x(vert, &theta), &theta), &theta);
+        vert_table.iter().for_each(|v| {
+            let rotated_point = v.rotate_x(&theta).rotate_y(&theta).rotate_z(&theta);
             rotated_vert_table.push(rotated_point);
-        }
+        });
 
         // Iterates through vert_table and adds projected points to another vec
-        for vert in rotated_vert_table.iter_mut() {
-            let p_point = project_point(vert, &FOCAL_LENGTH);
+        rotated_vert_table.iter_mut().for_each(|v| {
+            let p_point = v.project(&FOCAL_LENGTH);
             projected_vert_table.push(p_point);
-        }
+        });
 
         // Draws lines between two points determined by the edge_table
-        for edge in edge_table.iter() {
-            screen = plot_line(
+        edge_table.iter().for_each(|e| {
+            state = plot_line(
                 Point2D {
-                    x: projected_vert_table[edge.a].x,
-                    y: projected_vert_table[edge.a].y,
+                    x: projected_vert_table[e.a].x,
+                    y: projected_vert_table[e.a].y,
                 },
                 Point2D {
-                    x: projected_vert_table[edge.b].x,
-                    y: projected_vert_table[edge.b].y,
+                    x: projected_vert_table[e.b].x,
+                    y: projected_vert_table[e.b].y,
                 },
-                screen,
+                state,
             );
-        }
+        });
 
         // "Renders" 2D array from 0 and 1 to '..' and '##'
-        for row in screen.iter_mut() {
+        for row in state.iter_mut() {
             for cell in row.iter_mut() {
-                print!(
-                    "{}{0}",
-                    if *cell == 1 {
-                        line_char
-                    } else {
-                        fill_char
-                    }
-                );
+                print!("{}{0}", if *cell == 1 { line_char } else { fill_char });
             }
             println!();
         }
